@@ -5,8 +5,7 @@ import com.internship.tool.repository.ComplaintRepository;
 import com.internship.tool.exception.ComplaintNotFoundException;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cache.annotation.Cacheable;
-import org.springframework.cache.annotation.CacheEvict;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -28,7 +27,7 @@ public class ComplaintService {
     }
 
     // ✅ CREATE (clear cache) + Send email notification
-    @CacheEvict(value = "complaints", allEntries = true)
+    
     public Complaint createComplaint(Complaint complaint) {
         complaint.setStatus("OPEN");
         complaint.setCreatedAt(LocalDateTime.now());
@@ -46,51 +45,50 @@ public class ComplaintService {
     }
 
     // ✅ GET ALL (cached)
-    @Cacheable(value = "complaints")
+
     public List<Complaint> getAllComplaints() {
         return repository.findAll();
     }
 
     // ✅ GET ALL PAGINATED (optional cache)
-    @Cacheable(value = "complaintsPage", key = "#pageable.pageNumber")
+    
     public Page<Complaint> getAllPaginated(Pageable pageable) {
         return repository.findAll(pageable);
     }
 
     // ✅ GET BY ID (cached)
-    @Cacheable(value = "complaint", key = "#id")
     public Complaint getById(Long id) {
         return repository.findById(id)
                 .orElseThrow(() ->
                         new ComplaintNotFoundException("Complaint not found with id " + id));
     }
 
-    // ✅ UPDATE (clear cache) + Send status update email
-    @CacheEvict(value = {"complaints", "complaint"}, allEntries = true)
+    // ✅ UPDATE Send status update email
+    
     public Complaint updateComplaint(Long id, Complaint complaint) {
-        Complaint existing = getById(id);
-        String oldStatus = existing.getStatus();
-        
+
+    Complaint existing = getById(id);
+
+    if (complaint.getTitle() != null) {
         existing.setTitle(complaint.getTitle());
-        existing.setDescription(complaint.getDescription());
-        existing.setStatus(complaint.getStatus());
-        existing.setUpdatedAt(LocalDateTime.now());
-        Complaint updated = repository.save(existing);
-        
-        // Send status update email if status changed
-        if (!oldStatus.equals(complaint.getStatus())) {
-            try {
-                emailService.sendComplaintStatusUpdateEmail("admin@whistleblower.com", updated.getTitle(), complaint.getStatus());
-            } catch (Exception e) {
-                System.err.println("⚠️ Failed to send status update email: " + e.getMessage());
-            }
-        }
-        
-        return updated;
     }
 
+    if (complaint.getDescription() != null) {
+        existing.setDescription(complaint.getDescription());
+    }
+
+    if (complaint.getStatus() != null) {
+        existing.setStatus(complaint.getStatus());
+    }
+
+    existing.setUpdatedAt(LocalDateTime.now());
+
+    Complaint updated = repository.save(existing);
+
+    return updated;
+}
+
     // ✅ DELETE (clear cache)
-    @CacheEvict(value = {"complaints", "complaint"}, allEntries = true)
     public void deleteComplaint(Long id) {
         if (!repository.existsById(id)) {
             throw new ComplaintNotFoundException("Complaint not found with id " + id);

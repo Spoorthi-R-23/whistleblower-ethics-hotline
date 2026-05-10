@@ -18,7 +18,7 @@ public class AuthController {
 
     @GetMapping("/health")
     public Map<String, String> health() {
-        return Map.of("status", "✅ Backend is running!");
+        return Map.of("status", "Backend is running!");
     }
 
     @PostMapping("/login")
@@ -28,33 +28,56 @@ public class AuthController {
         String password = user.get("password");
 
         String token;
-        
-        System.out.println("🔓 Login attempt: " + username);
-        
+
+        System.out.println("Login attempt: " + username);
+
         // Admin login
         if ("admin".equals(username) && "admin123".equals(password)) {
+
             token = jwtUtil.generateAdminToken(username);
-            System.out.println("✅ Admin login successful, token generated");
+
+            System.out.println("Admin login successful");
         }
+
         // Regular user login
         else if ("user".equals(username) && "user123".equals(password)) {
+
             token = jwtUtil.generateToken(username);
-            System.out.println("✅ User login successful, token generated");
+
+            System.out.println("User login successful");
         }
-        // Legacy test login
+
+        // Legacy login
         else if ("admin".equals(username) && "1234".equals(password)) {
+
             token = jwtUtil.generateAdminToken(username);
-            System.out.println("✅ Legacy admin login successful, token generated");
+
+            System.out.println("Legacy admin login successful");
         }
+
         else {
-            System.out.println("❌ Invalid credentials: " + username);
+
             throw new RuntimeException("Invalid credentials");
         }
 
         Map<String, String> response = new HashMap<>();
+
         response.put("token", token);
         response.put("username", username);
-        System.out.println("📤 Token length: " + token.length());
+
+        return response;
+    }
+
+    @PostMapping("/register")
+    public Map<String, String> register(@RequestBody Map<String, String> user) {
+
+        String username = user.get("username");
+
+        Map<String, String> response = new HashMap<>();
+
+        response.put("message", "User registered successfully");
+        response.put("username", username);
+
         return response;
     }
 }

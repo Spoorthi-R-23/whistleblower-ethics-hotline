@@ -41,6 +41,14 @@ public class ComplaintController {
 
     return ResponseEntity.ok(complaintPage.getContent());
 }
+    @GetMapping("/{id}")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<Complaint> getById(@PathVariable Long id) {
+
+        System.out.println("Fetching complaint: " + id);
+
+        return ResponseEntity.ok(service.getById(id));
+    }
 
     // ✅ GET / (default - paginated) - Any authenticated user can read
     @GetMapping
@@ -53,6 +61,9 @@ public class ComplaintController {
 
     return ResponseEntity.ok(complaintPage.getContent());
 }
+
+    
+
 
     // ✅ PUT /{id} - Any authenticated user can update
     @PutMapping("/{id}")
